@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Technieker Planning</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      position: relative;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .grid-container {
+      position: relative;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-top: 80px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 120px repeat(8, 1fr);
+      gap: 1px;
+      background: #999;
+      margin-bottom: 30px;
+    }
+
+    .cell, .header {
+      background: white;
+      padding: 10px;
+      height: 60px;
+      position: relative;
+      border: 1px solid #ccc;
+    }
+
+    .header {
+      background: #f0f0f0;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .tech-name {
+      background: #ddd;
+      font-weight: bold;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .tech-colors {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
+      margin-top: 5px;
+    }
+
+    .color-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid #000;
+    }
+
+    .block {
+      width: 100%;
+      height: 100%;
+      border-radius: 5px;
+      color: #fff;
+      font-weight: bold;
+      text-align: center;
+      line-height: 20px;
+      cursor: grab;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      padding: 2px;
+      box-sizing: border-box;
+      transition: all 0.5s ease;
+      border: 2px solid #000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .used {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .active {
+      opacity: 0.8;
+      filter: grayscale(70%) brightness(0.8);
+      background-image: repeating-linear-gradient(
+        45deg,
+        rgba(0, 0, 0, 0.2),
+        rgba(0, 0, 0, 0.2) 4px,
+        transparent 4px,
+        transparent 8px
+      ) !important;
+      position: relative;
+      cursor: not-allowed !important;
+    }
+
+    .completed {
+      opacity: 0.6;
+      filter: grayscale(90%) brightness(0.7);
+      background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(0, 0, 0, 0.3),
+        rgba(0, 0, 0, 0.3) 4px,
+        transparent 4px,
+        transparent 8px
+      ) !important;
+      cursor: not-allowed !important;
+    }
+
+    .completed::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.2);
+      z-index: 1;
+      border-radius: 5px;
+    }
+
+    .block-pool {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .block-wrapper {
+      width: 100px;
+      height: 40px;
+    }
+
+    .in-grid {
+      position: absolute;
+      top: 5px;
+      left: 0;
+      height: 50px;
+      z-index: 10;
+    }
+
+    #timeline {
+      position: absolute;
+      top: 60px;
+      left: 128px;
+      width: 3px;
+      height: calc(100% - 60px);
+      background-color: red;
+      z-index: 20;
+      pointer-events: none;
+      transition: left 0.5s ease;
+      box-shadow: 0 0 5px rgba(255,0,0,0.5);
+    }
+
+    #timeline::after {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -6px;
+      width: 14px;
+      height: 14px;
+      background-color: red;
+      border-radius: 50%;
+      box-shadow: 0 0 5px rgba(255,0,0,0.7);
+    }
+
+    .block-duration {
+      font-size: 12px;
+      margin-top: 2px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      z-index: 2;
+      position: relative;
+    }
+
+    #start-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    #start-content {
+      background: #2c3e50;
+      padding: 40px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+      max-width: 500px;
+      width: 80%;
+    }
+
+    #start-content h2 {
+      color: #f1c40f;
+      font-size: 2.5em;
+      margin-bottom: 30px;
+    }
+
+    #start-button {
+      padding: 20px 50px;
+      font-size: 1.5em;
+      background: #f1c40f;
+      color: black;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: bold;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    #start-button:hover {
+      background: #f1c40f;
+      transform: scale(1.05);
+      box-shadow: 0 7px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    h2 {
+      color: #333;
+      margin-top: 20px;
+    }
+
+    .block-label {
+      z-index: 2;
+      position: relative;
+    }
+
+    #timer-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 15px;
+    }
+
+    #timer, #score {
+      font-size: 1.5em;
+      font-weight: bold;
+      background: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      background-color: #f8f9fa;
+      color: #333;
+      min-width: 120px;
+      text-align: center;
+      z-index: 30;
+    }
+
+    #timer {
+      border: 2px solid #4CAF50;
+    }
+
+    #score {
+      border: 2px solid #2196F3;
+    }
+
+    .timer-label, .score-label {
+      font-size: 0.7em;
+      color: #666;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .return-to-pool {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      width: 20px;
+      height: 20px;
+      background: #ff4444;
+      border-radius: 50%;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      z-index: 100;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .in-grid:hover .return-to-pool {
+      opacity: 1;
+    }
+
+    #game-over {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      color: white;
+    }
+
+    #game-over-content {
+      background: #2c3e50;
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 600px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    #game-over h2 {
+      color: #e74c3c;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+
+    #final-score {
+      font-size: 3em;
+      color: #f1c40f;
+      margin: 20px 0;
+    }
+
+    #score-breakdown {
+      margin: 20px 0;
+      text-align: left;
+      background: #34495e;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .score-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      padding: 8px;
+      background: #2c3e50;
+      border-radius: 5px;
+    }
+
+    .score-points {
+      font-weight: bold;
+      color: #f1c40f;
+    }
+
+    #restart-button {
+      padding: 15px 30px;
+      font-size: 1.2em;
+      background: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: all 0.3s ease;
+    }
+
+    #restart-button:hover {
+      background: #2ecc71;
+      transform: scale(1.05);
+    }
+
+    /* Nieuwe stijlen voor verleden tijd cellen */
+    .past-time {
+      background-color: #f5f5f5 !important;
+      background-image: repeating-linear-gradient(
+        45deg,
+        rgba(0, 0, 0, 0.05),
+        rgba(0, 0, 0, 0.05) 2px,
+        transparent 2px,
+        transparent 4px
+      ) !important;
+      cursor: not-allowed !important;
+    }
+
+    .past-time::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.05);
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div id="start-screen">
+  <div id="start-content">
+    <h2>Technieker Planning Spel</h2>
+    <button id="start-button">Start Spel</button>
+  </div>
+</div>
+
+<div id="game-over">
+  <div id="game-over-content">
+    <h2>GAME OVER</h2>
+    <div>Jouw eindscore:</div>
+    <div id="final-score">0 punten</div>
+    <div id="score-breakdown">
+      <h3>Score-overzicht</h3>
+      <div id="breakdown-list"></div>
+    </div>
+    <button id="restart-button">Opnieuw Spelen</button>
+  </div>
+</div>
+
+<h1>Technieker Planning</h1>
+<div id="timer-container">
+  <div id="score">
+    <span class="score-label">SCORE</span>
+    <span id="score-display">0</span>
+  </div>
+  <div id="timer">
+    <span class="timer-label">HUIDIGE TIJD</span>
+    <span id="time-display">9:00</span>
+  </div>
+</div>
+
+<div id="popup" style="
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffc107;
+  padding: 20px 40px;
+  border-radius: 10px;
+  font-size: 1.5em;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  z-index: 1000;
+  border: 2px solid #FF9800;
+">
+  Jean-Marc is ziek!
+</div>
+
+<div class="grid-container">
+  <div id="timeline"></div>
+  
+  <div class="grid" id="planning-grid">
+    <!-- Bovenste tijdlijn -->
+    <div class="header"></div>
+    <div class="header">9u</div>
+    <div class="header">10u</div>
+    <div class="header">11u</div>
+    <div class="header">12u</div>
+    <div class="header">13u</div>
+    <div class="header">14u</div>
+    <div class="header">15u</div>
+    <div class="header">16u</div>
+  </div>
+</div>
+
+<!-- Blokken om te slepen -->
+<h2>Blokjes</h2>
+<div class="block-pool" id="block-pool">
+</div>
+
+<script>
+  const techniekers = [
+    { name: "Jean-Michel", colors: ["green", "goldenrod", "red", "blue", "gray"] },
+    { name: "Jean-Marie", colors: ["green", "goldenrod", "red", "blue", "gray"] },
+    { name: "Jean-Paul", colors: ["red", "blue", "goldenrod"] },
+    { name: "Jean-Francois", colors: ["blue", "goldenrod"] },
+    { name: "Jean-Marc", colors: ["blue"] }
+  ];
+
+  const grid = document.getElementById("planning-grid");
+  const timeline = document.getElementById("timeline");
+  const startScreen = document.getElementById("start-screen");
+  const startButton = document.getElementById("start-button");
+  const timeDisplay = document.getElementById("time-display");
+  const scoreDisplay = document.getElementById("score-display");
+  const gameOverScreen = document.getElementById("game-over");
+  const finalScoreDisplay = document.getElementById("final-score");
+  const breakdownList = document.getElementById("breakdown-list");
+  const restartButton = document.getElementById("restart-button");
+  const blockPool = document.getElementById("block-pool");
+  let gameStarted = false;
+  let timerInterval = null;
+  let cellWidth = 0;
+  let score = 0;
+  let scoreDetails = {
+    invalidPlacements: [],
+    unusedBlocks: []
+  };
+
+  startButton.addEventListener("click", startGame);
+  restartButton.addEventListener("click", restartGame);
+
+  function startGame() {
+    gameStarted = true;
+    startScreen.classList.add("hidden");
+    
+    const firstHeader = document.querySelector('.header:nth-child(2)');
+    cellWidth = firstHeader.getBoundingClientRect().width;
+    
+    timerInterval = setInterval(updateTimer, 5000);
+    
+    setTimeout(() => {
+      toonPopup("Jean-Marc is ziek!");
+      verplaatsJeanMarcBlokken();
+      markeerJeanMarcAfwezig();
+    }, 4000);
+  }
+
+  function restartGame() {
+    location.reload();
+  }
+
+  techniekers.forEach((tech, rowIndex) => {
+    const labelCell = document.createElement("div");
+    labelCell.className = "cell tech-name";
+    
+    const nameElement = document.createElement("div");
+    nameElement.textContent = tech.name;
+    labelCell.appendChild(nameElement);
+    
+    const colorsContainer = document.createElement("div");
+    colorsContainer.className = "tech-colors";
+    
+    tech.colors.forEach(color => {
+      const colorIndicator = document.createElement("div");
+      colorIndicator.className = "color-indicator";
+      colorIndicator.style.backgroundColor = color;
+      colorsContainer.appendChild(colorIndicator);
+    });
+    
+    labelCell.appendChild(colorsContainer);
+    grid.appendChild(labelCell);
+
+    for (let hour = 0; hour < 8; hour++) {
+      const cell = document.createElement("div");
+      cell.className = "cell dropzone";
+      cell.dataset.row = rowIndex;
+      cell.dataset.col = hour;
+      cell.dataset.allowedColors = tech.colors.join(',');
+      cell.dataset.hour = hour + 9; // Toegevoegd: uur van de cel
+
+      cell.addEventListener("dragover", e => {
+        if (!cell.classList.contains("afwezig") && !cell.classList.contains("past-time")) {
+          e.preventDefault();
+        }
+      });
+
+      cell.addEventListener("drop", handleDrop);
+
+      grid.appendChild(cell);
+    }
+  });
+
+  let draggedBlock = null;
+
+  document.addEventListener('dragstart', function(e) {
+    if (e.target.classList.contains('block') && !e.target.classList.contains('used') && 
+        !e.target.classList.contains('active') && !e.target.classList.contains('completed')) {
+      draggedBlock = e.target;
+    }
+  });
+
+  function handleDrop(e) {
+    e.preventDefault();
+    if (!draggedBlock || draggedBlock.classList.contains("used") || 
+        draggedBlock.classList.contains("active") || draggedBlock.classList.contains("completed")) return;
+    if (e.currentTarget.classList.contains("afwezig")) {
+      alert("Jean-Marc is afwezig! Je kan hier niets plannen.");
+      return;
+    }
+    
+    // Controleren of de cel in het verleden ligt
+    if (e.currentTarget.classList.contains("past-time")) {
+      alert("Deze tijd is al voorbij! Je kan hier niets meer plannen.");
+      return;
+    }
+
+    const duur = parseInt(draggedBlock.dataset.duur);
+    const startCol = parseInt(e.currentTarget.dataset.col);
+    const row = parseInt(e.currentTarget.dataset.row);
+    const allowedColors = e.currentTarget.dataset.allowedColors.split(',');
+    const blockColor = draggedBlock.style.backgroundColor;
+    const blockType = draggedBlock.querySelector('.block-label').textContent;
+
+    if (!allowedColors.includes(blockColor)) {
+      const points = calculatePoints(blockColor);
+      updateScore(points);
+      scoreDetails.invalidPlacements.push({type: blockType, points: points});
+      alert(`Deze technieker kan geen ${blockType} blokjes ontvangen! Score: +${points}`);
+      return;
+    }
+
+    if (startCol + duur > 8) {
+      alert("Te weinig ruimte voor dit blokje.");
+      return;
+    }
+
+    const allCells = [...document.querySelectorAll(`.cell[data-row='${row}']`)];
+    const targetCells = allCells.slice(startCol, startCol + duur);
+
+    // Controleren of alle cellen in de toekomst liggen
+    for (const cell of targetCells) {
+      if (cell.classList.contains("past-time")) {
+        alert("Een deel van dit blokje ligt in het verleden! Kies een latere starttijd.");
+        return;
+      }
+    }
+
+    for (const cell of targetCells) {
+      if (cell.querySelector(".in-grid")) {
+        alert("Er zit al een blokje op deze plek.");
+        return;
+      }
+    }
+
+    const cellWidth = targetCells[0].getBoundingClientRect().width;
+    const totaleBreedte = cellWidth * duur - 4; 
+
+    const firstCell = targetCells[0];
+    const newBlock = draggedBlock.cloneNode(true);
+    newBlock.classList.add("in-grid");
+    newBlock.draggable = true;
+    newBlock.style.width = `${totaleBreedte}px`;
+    newBlock.style.height = `50px`;
+
+    newBlock.dataset.startHour = startCol + 9;
+    newBlock.dataset.duration = duur;
+
+    const returnButton = document.createElement("div");
+    returnButton.className = "return-to-pool";
+    returnButton.textContent = "×";
+    returnButton.title = "Verwijder blokje";
+    returnButton.addEventListener("click", function(e) {
+      e.stopPropagation();
+      verwijderBlok(newBlock);
+    });
+    newBlock.appendChild(returnButton);
+
+    firstCell.appendChild(newBlock);
+
+    newBlock.addEventListener("dragstart", function(e) {
+      if (newBlock.classList.contains("active") || newBlock.classList.contains("completed")) {
+        e.preventDefault();
+        return;
+      }
+      draggedBlock = newBlock;
+      e.dataTransfer.setData("text/plain", "");
+    });
+
+    if (draggedBlock.parentElement.classList.contains("block-wrapper")) {
+      draggedBlock.classList.add("used");
+      draggedBlock.setAttribute("draggable", false);
+    } else {
+      draggedBlock.remove();
+    }
+    
+    draggedBlock = null;
+
+    updateBlockStatus(newBlock);
+    updatePastTimeCells();
+  }
+
+  function verwijderBlok(blok) {
+    if (blok.classList.contains("active") || blok.classList.contains("completed")) {
+      alert("Dit blokje is al actief or voltooid en kan niet worden verwijderd.");
+      return;
+    }
+    
+    const wrapper = document.createElement("div");
+    wrapper.className = "block-wrapper";
+
+    const nieuwBlok = document.createElement("div");
+    nieuwBlok.className = "block";
+    nieuwBlok.setAttribute("draggable", "true");
+    nieuwBlok.setAttribute("data-duur", blok.dataset.duration);
+    nieuwBlok.style.background = blok.style.backgroundColor;
+    
+    const labelElement = document.createElement("div");
+    labelElement.className = "block-label";
+    labelElement.textContent = blok.querySelector('.block-label').textContent;
+    
+    const durationElement = document.createElement("div");
+    durationElement.className = "block-duration";
+    durationElement.textContent = `${blok.dataset.duration}u`;
+    
+    nieuwBlok.appendChild(labelElement);
+    nieuwBlok.appendChild(durationElement);
+
+    nieuwBlok.addEventListener("dragstart", e => {
+      if (nieuwBlok.classList.contains("used")) {
+        e.preventDefault();
+        return;
+      }
+      draggedBlock = nieuwBlok;
+      e.dataTransfer.setData("text/plain", "");
+    });
+
+    wrapper.appendChild(nieuwBlok);
+    blockPool.appendChild(wrapper);
+
+    blok.remove();
+  }
+
+  function calculatePoints(color) {
+    switch(color) {
+      case "green": return 5;
+      case "red": return 4;
+      case "goldenrod": return 3;
+      case "gray": return 2;
+      case "blue": return 1;
+      default: return 0;
+    }
+  }
+
+  function getColorName(color) {
+    switch(color) {
+      case "green": return "Groen (F7)";
+      case "red": return "Rood (CC)";
+      case "goldenrod": return "Geel (SME)";
+      case "gray": return "Grijs (REPAIR)";
+      case "blue": return "Blauw (DATA)";
+      default: return "Onbekend";
+    }
+  }
+
+  function updateScore(points) {
+    score += points;
+    scoreDisplay.textContent = score;
+  }
+
+  function showGameOver() {
+    gameOverScreen.style.display = "flex";
+    finalScoreDisplay.textContent = `${score} punten`;
+    
+    breakdownList.innerHTML = "";
+    
+    if (scoreDetails.invalidPlacements.length > 0) {
+        const div = document.createElement("div");
+        div.innerHTML = "<h4>Punten van ongeldige plaatsingen:</h4>";
+        breakdownList.appendChild(div);
+        
+        scoreDetails.invalidPlacements.forEach(item => {
+            const scoreItem = document.createElement("div");
+            scoreItem.className = "score-item";
+            scoreItem.innerHTML = `
+                <span>Ongeldige ${item.type} plaatsing</span>
+                <span class="score-points">+${item.points}</span>
+            `;
+            breakdownList.appendChild(scoreItem);
+        });
+    }
+    
+    if (scoreDetails.unusedBlocks.length > 0) {
+        const div = document.createElement("div");
+        div.innerHTML = "<h4>Punten van ongebruikte blokken:</h4>";
+        breakdownList.appendChild(div);
+        
+        scoreDetails.unusedBlocks.forEach(item => {
+            const scoreItem = document.createElement("div");
+            scoreItem.className = "score-item";
+            scoreItem.innerHTML = `
+                <span>Ongebruikt ${getColorName(item.color)} blok</span>
+                <span class="score-points">+${item.points}</span>
+            `;
+            breakdownList.appendChild(scoreItem);
+        });
+    }
+    
+    const totalItem = document.createElement("div");
+    totalItem.className = "score-item";
+    totalItem.style.marginTop = "20px";
+    totalItem.style.fontWeight = "bold";
+    totalItem.style.background = "#1e2a36";
+    totalItem.innerHTML = `
+        <span>TOTALE SCORE</span>
+        <span class="score-points">${score} punten</span>
+    `;
+    breakdownList.appendChild(totalItem);
+  }
+
+  function calculateFinalScore() {
+    const remainingBlocks = document.querySelectorAll('#block-pool .block:not(.used)');
+    remainingBlocks.forEach(block => {
+      const blockColor = block.style.backgroundColor;
+      const points = calculatePoints(blockColor);
+      updateScore(points);
+      scoreDetails.unusedBlocks.push({color: blockColor, points: points});
+    });
+
+    showGameOver();
+  }
+
+  function plaatsBlok(row, col, kleur, duur, label) {
+    const allCells = [...document.querySelectorAll(`.cell[data-row='${row}']`)];
+    const targetCells = allCells.slice(col, col + duur);
+
+    const cellWidth = targetCells[0].getBoundingClientRect().width;
+    const totaleBreedte = cellWidth * duur - 4; 
+
+    const newBlock = document.createElement("div");
+    newBlock.className = "block in-grid";
+    newBlock.style.background = kleur;
+    newBlock.style.width = `${totaleBreedte}px`;
+    newBlock.style.height = `50px`;
+    newBlock.draggable = true;
+    
+    const labelElement = document.createElement("div");
+    labelElement.className = "block-label";
+    labelElement.textContent = label;
+    
+    const durationElement = document.createElement("div");
+    durationElement.className = "block-duration";
+    durationElement.textContent = `${duur}u`;
+    
+    newBlock.appendChild(labelElement);
+    newBlock.appendChild(durationElement);
+
+    const returnButton = document.createElement("div");
+    returnButton.className = "return-to-pool";
+    returnButton.textContent = "×";
+    returnButton.title = "Verwijder blokje";
+    returnButton.addEventListener("click", function(e) {
+      e.stopPropagation();
+      verwijderBlok(newBlock);
+    });
+    newBlock.appendChild(returnButton);
+
+    newBlock.dataset.startHour = col + 9;
+    newBlock.dataset.duration = duur;
+
+    newBlock.addEventListener("dragstart", function(e) {
+      if (newBlock.classList.contains("active") || newBlock.classList.contains("completed")) {
+        e.preventDefault();
+        return;
+      }
+      draggedBlock = newBlock;
+      e.dataTransfer.setData("text/plain", "");
+    });
+
+    targetCells[0].appendChild(newBlock);
+    
+    updateBlockStatus(newBlock);
+  }
+
+  function toonPopup(tekst) {
+    const popup = document.getElementById("popup");
+    popup.textContent = tekst;
+    popup.style.display = "block";
+    setTimeout(() => {
+      popup.style.display = "none";
+    }, 3000);
+  }
+
+  function verplaatsJeanMarcBlokken() {
+    const jmBlokken = document.querySelectorAll(`.cell[data-row='4'] .in-grid`);
+    jmBlokken.forEach(block => {
+      const label = block.querySelector('.block-label').textContent;
+      const kleur = block.style.backgroundColor;
+      const duur = Math.round(block.getBoundingClientRect().width / block.parentElement.getBoundingClientRect().width);
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "block-wrapper";
+
+      const nieuwBlok = document.createElement("div");
+      nieuwBlok.className = "block";
+      nieuwBlok.setAttribute("draggable", "true");
+      nieuwBlok.setAttribute("data-duur", duur);
+      nieuwBlok.style.background = kleur;
+      
+      const labelElement = document.createElement("div");
+      labelElement.className = "block-label";
+      labelElement.textContent = label;
+      
+      const durationElement = document.createElement("div");
+      durationElement.className = "block-duration";
+      durationElement.textContent = `${duur}u`;
+      
+      nieuwBlok.appendChild(labelElement);
+      nieuwBlok.appendChild(durationElement);
+
+      nieuwBlok.addEventListener("dragstart", e => {
+        if (nieuwBlok.classList.contains("used")) {
+          e.preventDefault();
+          return;
+        }
+        draggedBlock = nieuwBlok;
+        e.dataTransfer.setData("text/plain", ""); 
+      });
+
+      wrapper.appendChild(nieuwBlok);
+      blockPool.appendChild(wrapper);
+    });
+
+    jmBlokken.forEach(block => block.remove());
+  }
+
+  function enkelgrijsBlokToegevoegd() {
+    const wrapper = document.createElement("div");
+    wrapper.className = "block-wrapper";
+
+    const repairBlock = document.createElement("div");
+    repairBlock.className = "block";
+    repairBlock.setAttribute("draggable", "true");
+    repairBlock.setAttribute("data-duur", "1");
+    repairBlock.style.background = "gray";
+    
+    const labelElement = document.createElement("div");
+    labelElement.className = "block-label";
+    labelElement.textContent = "REPAIR";
+    
+    const durationElement = document.createElement("div");
+    durationElement.className = "block-duration";
+    durationElement.textContent = "1u";
+      
+    repairBlock.appendChild(labelElement);
+    repairBlock.appendChild(durationElement);
+
+    repairBlock.addEventListener("dragstart", e => {
+      if (repairBlock.classList.contains("used")) {
+        e.preventDefault();
+        return;
+      }
+      draggedBlock = repairBlock;
+      e.dataTransfer.setData("text/plain", ""); 
+      e.dataTransfer.effectAllowed = "move";
+    });
+
+    wrapper.appendChild(repairBlock);
+    blockPool.appendChild(wrapper);
+  }
+
+  function voegRepairBlokkenToe() {
+    for (let i = 0; i < 2; i++) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "block-wrapper";
+
+      const repairBlock = document.createElement("div");
+      repairBlock.className = "block";
+      repairBlock.setAttribute("draggable", "true");
+      repairBlock.setAttribute("data-duur", "1");
+      repairBlock.style.background = "gray";
+      
+      const labelElement = document.createElement("div");
+      labelElement.className = "block-label";
+      labelElement.textContent = "REPAIR";
+      
+      const durationElement = document.createElement("div");
+      durationElement.className = "block-duration";
+      durationElement.textContent = "1u";
+      
+      repairBlock.appendChild(labelElement);
+      repairBlock.appendChild(durationElement);
+
+      repairBlock.addEventListener("dragstart", e => {
+        if (repairBlock.classList.contains("used")) {
+          e.preventDefault();
+          return;
+        }
+        draggedBlock = repairBlock;
+        e.dataTransfer.setData("text/plain", ""); 
+        e.dataTransfer.effectAllowed = "move";
+    });
+
+      wrapper.appendChild(repairBlock);
+      blockPool.appendChild(wrapper);
+    }
+  }
+
+  function voegBlauweBlokkenToe() {
+    for (let i = 0; i < 2; i++) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "block-wrapper";
+
+      const blueBlock = document.createElement("div");
+      blueBlock.className = "block";
+      blueBlock.setAttribute("draggable", "true");
+      blueBlock.setAttribute("data-duur", "2");
+      blueBlock.style.background = "blue";
+      
+      const labelElement = document.createElement("div");
+      labelElement.className = "block-label";
+      labelElement.textContent = "DATA";
+      
+      const durationElement = document.createElement("div");
+      durationElement.className = "block-duration";
+      durationElement.textContent = "2u";
+      
+      blueBlock.appendChild(labelElement);
+      blueBlock.appendChild(durationElement);
+
+      blueBlock.addEventListener("dragstart", e => {
+        if (blueBlock.classList.contains("used")) {
+          e.preventDefault();
+          return;
+        }
+        draggedBlock = blueBlock;
+        e.dataTransfer.setData("text/plain", ""); 
+        e.dataTransfer.effectAllowed = "move";
+      });
+
+      wrapper.appendChild(blueBlock);
+      blockPool.appendChild(wrapper);
+    }
+  }
+
+  function markeerJeanMarcAfwezig() {
+    const jmCells = document.querySelectorAll(`.cell[data-row='4']`);
+    jmCells.forEach(cell => {
+      cell.style.backgroundColor = "#e0e0e0"; 
+      cell.textContent = "Afwezig";
+      cell.style.color = "#888";
+      cell.classList.add("afwezig");
+      cell.style.cursor = "not-allowed";
+    });
+  }
+
+  function voegGeelBlokToe() {
+    const wrapper = document.createElement("div");
+    wrapper.className = "block-wrapper";
+
+    const geelBlok = document.createElement("div");
+    geelBlok.className = "block";
+    geelBlok.setAttribute("draggable", "true");
+    geelBlok.setAttribute("data-duur", "2");
+    geelBlok.style.background = "goldenrod";
+    
+    const labelElement = document.createElement("div");
+    labelElement.className = "block-label";
+    labelElement.textContent = "SME";
+    
+    const durationElement = document.createElement("div");
+    durationElement.className = "block-duration";
+    durationElement.textContent = "2u";
+    
+    geelBlok.appendChild(labelElement);
+    geelBlok.appendChild(durationElement);
+
+    geelBlok.addEventListener("dragstart", e => {
+      if (geelBlok.classList.contains("used")) {
+      e.preventDefault();
+      return;
+    }
+    draggedBlock = geelBlok;
+    e.dataTransfer.setData("text/plain", ""); 
+    e.dataTransfer.effectAllowed = "move";
+    });
+
+    wrapper.appendChild(geelBlok);
+    blockPool.appendChild(wrapper);
+  }
+
+  function voegGroenBlokToe() {
+    const wrapper = document.createElement("div");
+    wrapper.className = "block-wrapper";
+
+    const groenBlok = document.createElement("div");
+    groenBlok.className = "block";
+    groenBlok.setAttribute("draggable", "true");
+    groenBlok.setAttribute("data-duur", "3");
+    groenBlok.style.background = "green";
+    
+    const labelElement = document.createElement("div");
+    labelElement.className = "block-label";
+    labelElement.textContent = "F7";
+    
+    const durationElement = document.createElement("div");
+    durationElement.className = "block-duration";
+    durationElement.textContent = "3u";
+    
+    groenBlok.appendChild(labelElement);
+    groenBlok.appendChild(durationElement);
+
+    groenBlok.addEventListener("dragstart", e => {
+      if (groenBlok.classList.contains("used")) {
+      e.preventDefault();
+      return;
+    }
+    draggedBlock = groenBlok;
+    e.dataTransfer.setData("text/plain", ""); 
+    e.dataTransfer.effectAllowed = "move";
+    });
+
+    wrapper.appendChild(groenBlok);
+    blockPool.appendChild(wrapper);
+  }
+
+  function voegRoodBlokToe() {
+    const wrapper = document.createElement("div");
+    wrapper.className = "block-wrapper";
+
+    const roodBlok = document.createElement("div");
+    roodBlok.className = "block";
+    roodBlok.setAttribute("draggable", "true");
+    roodBlok.setAttribute("data-duur", "2");
+    roodBlok.style.background = "red";
+    
+    const labelElement = document.createElement("div");
+    labelElement.className = "block-label";
+    labelElement.textContent = "CC";
+    
+    const durationElement = document.createElement("div");
+    durationElement.className = "block-duration";
+    durationElement.textContent = "2u";
+    
+    roodBlok.appendChild(labelElement);
+    roodBlok.appendChild(durationElement);
+
+    roodBlok.addEventListener("dragstart", e => {
+      if (roodBlok.classList.contains("used")) {
+      e.preventDefault();
+      return;
+    }
+    draggedBlock = roodBlok;
+    e.dataTransfer.setData("text/plain", ""); 
+    e.dataTransfer.effectAllowed = "move";
+    });
+
+    wrapper.appendChild(roodBlok);
+    blockPool.appendChild(wrapper);
+  }
+
+  function verplaatsSmeJeanMichel() {
+    const blokken = document.querySelectorAll(`.cell[data-row='0'] .in-grid`);
+    blokken.forEach(block => block.remove());
+
+    plaatsBlok(0, 0, "green", 6, "F7");
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "block-wrapper";
+
+    const geelBlok = document.createElement("div");
+    geelBlok.className = "block";
+    geelBlok.setAttribute("draggable", "true");
+    geelBlok.setAttribute("data-duur", "2");
+    geelBlok.style.background = "goldenrod";
+    
+    const labelElement = document.createElement("div");
+    labelElement.className = "block-label";
+    labelElement.textContent = "SME";
+    
+    const durationElement = document.createElement("div");
+    durationElement.className = "block-duration";
+    durationElement.textContent = "2u";
+    
+    geelBlok.appendChild(labelElement);
+    geelBlok.appendChild(durationElement);
+
+    geelBlok.addEventListener("dragstart", e => {
+      if (geelBlok.classList.contains("used")) {
+        e.preventDefault();
+        return;
+      }
+      draggedBlock = geelBlok;
+      e.dataTransfer.setData("text/plain", ""); 
+      e.dataTransfer.effectAllowed = "move";
+    });
+
+    wrapper.appendChild(geelBlok);
+    blockPool.appendChild(wrapper);
+  }
+
+  // TIMER
+  let totalMinutes = 9 * 60; 
+
+  function updateTimelinePosition() {
+    const hoursSince9 = (totalMinutes - 9 * 60) / 60;
+    
+    const newPosition = 120 + (hoursSince9 * cellWidth) + 8;
+    
+    timeline.style.left = `${newPosition}px`;
+
+    updateAllBlocksStatus();
+  }
+
+  function updateBlockStatus(block) {
+    const currentHour = totalMinutes / 60;
+    const startHour = parseFloat(block.dataset.startHour);
+    const duration = parseFloat(block.dataset.duration);
+    const endHour = startHour + duration;
+    
+    block.classList.remove('active', 'completed');
+
+    if (currentHour >= startHour && currentHour < endHour) {
+      block.classList.add('active');
+      block.draggable = false;
+      block.style.cursor = 'not-allowed';
+      const returnButton = block.querySelector('.return-to-pool');
+      if (returnButton) returnButton.style.display = 'none';
+    } else if (currentHour >= endHour) {
+      block.classList.add('completed');
+      block.draggable = false;
+      block.style.cursor = 'not-allowed';
+      const returnButton = block.querySelector('.return-to-pool');
+      if (returnButton) returnButton.style.display = 'none';
+    } else {
+      block.draggable = true;
+      block.style.cursor = 'grab';
+      const returnButton = block.querySelector('.return-to-pool');
+      if (returnButton) returnButton.style.display = 'block';
+    }
+  }
+
+  function updateAllBlocksStatus() {
+    const allBlocks = document.querySelectorAll('.in-grid');
+    allBlocks.forEach(block => updateBlockStatus(block));
+  }
+
+  function updatePastTimeCells() {
+    const currentHour = totalMinutes / 60;
+    
+    document.querySelectorAll('.cell.dropzone').forEach(cell => {
+      const cellHour = parseInt(cell.dataset.hour);
+      
+      // Verwijder eerst de bestaande past-time markering
+      cell.classList.remove("past-time");
+      
+      // Als de cel in het verleden ligt, markeer deze dan
+      if (cellHour < currentHour) {
+        cell.classList.add("past-time");
+      }
+    });
+  }
+
+  let repairBlokkenToegevoegd = false;
+  let blauweBlokkenToegevoegd = false;
+  let geelBlokToegevoegd = false;
+  let extraRepairToegevoegd = false;
+  let smeeBlokVerplaatst = false;
+  let jfKlantAfwezig = false;
+  let enkelgrijsbloktoegevoegd = false;
+  let groenBlokToegevoegd = false;
+  let roodBlokToegevoegd = false;
+
+  function updateTimer() {
+    if (!gameStarted) return;
+    if (totalMinutes >= 17 * 60) {
+      clearInterval(timerInterval);
+      calculateFinalScore();
+      return;
+    }
+
+    totalMinutes += 5;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    const timeString = `${hours}:${minutes.toString().padStart(2, '0')}`;
+    timeDisplay.textContent = timeString;
+    updateTimelinePosition();
+    updatePastTimeCells();
+    
+    if (totalMinutes >= 10 * 60 && !repairBlokkenToegevoegd) {
+      voegRepairBlokkenToe();
+      repairBlokkenToegevoegd = true;
+    }
+
+    if (totalMinutes >= 10 * 60 + 30 && !groenBlokToegevoegd) {
+      voegGroenBlokToe();
+      groenBlokToegevoegd = true;
+    }
+
+    if (totalMinutes >= 11 * 60 && !blauweBlokkenToegevoegd) {
+      voegBlauweBlokkenToe();
+      blauweBlokkenToegevoegd = true;
+    }
+
+    if (totalMinutes >= 12 * 60 && !geelBlokToegevoegd) {
+      voegGeelBlokToe();
+      geelBlokToegevoegd = true;
+    }
+
+    if (totalMinutes >= 12 * 60 + 30 && !roodBlokToegevoegd) {
+      voegRoodBlokToe();
+      roodBlokToegevoegd = true;
+    }
+
+    if (totalMinutes >= 13 * 60 && !extraRepairToegevoegd) {
+      voegRepairBlokkenToe();
+      extraRepairToegevoegd = true;
+    }
+
+    if (totalMinutes >= 14 * 60 && !smeeBlokVerplaatst) {
+      toonPopup("Klant van Jean-Michel niet thuis!");
+      verplaatsSmeJeanMichel();
+      smeeBlokVerplaatst = true;
+    }
+    
+    if (totalMinutes >= 15 * 60 && !jfKlantAfwezig) {
+      toonPopup("Klant van Jean-Francois is afwezig!");
+
+      const jfGeleBlokken = document.querySelectorAll(`.cell[data-row='3'] .in-grid`);
+      jfGeleBlokken.forEach(blok => {
+        if (blok.querySelector('.block-label').textContent === "SME" && blok.style.backgroundColor === "goldenrod") {
+          blok.remove();
+        }
+      });
+
+      jfKlantAfwezig = true;
+    }
+
+    if (totalMinutes >= 16 * 60 && !enkelgrijsbloktoegevoegd) {
+      enkelgrijsBlokToegevoegd();
+      enkelgrijsbloktoegevoegd = true;
+    }
+  }
+
+  // Initialiseer de planning met de originele blokken
+  window.addEventListener("DOMContentLoaded", () => {
+    plaatsBlok(0, 0, "green", 6, "F7");
+    plaatsBlok(0, 6, "goldenrod", 2, "SME");
+
+    plaatsBlok(1, 0, "goldenrod", 2, "SME");
+    plaatsBlok(1, 2, "gray", 1, "REPAIR");
+
+    plaatsBlok(2, 0, "red", 3, "CC");
+
+    plaatsBlok(3, 0, "blue", 2, "DATA");
+    plaatsBlok(3, 2, "goldenrod", 2, "SME");
+
+    plaatsBlok(4, 0, "blue", 2, "DATA");
+    
+    setTimeout(() => {
+      const firstHeader = document.querySelector('.header:nth-child(2)');
+      cellWidth = firstHeader.getBoundingClientRect().width;
+      
+      timeline.style.left = '128px';
+      updatePastTimeCells();
+    }, 100);
+  });
+</script>
+
+</body>
+</html>
