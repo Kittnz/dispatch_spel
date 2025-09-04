@@ -377,23 +377,6 @@
       color: #f1c40f;
     }
 
-    #restart-button {
-      padding: 15px 30px;
-      font-size: 1.2em;
-      background: #27ae60;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 20px;
-      transition: all 0.3s ease;
-    }
-
-    #restart-button:hover {
-      background: #2ecc71;
-      transform: scale(1.05);
-    }
-
     /* Nieuwe stijlen voor verleden tijd cellen */
     .past-time {
       background-color: #f5f5f5 !important;
@@ -437,7 +420,6 @@
       <h3>Score-overzicht</h3>
       <div id="breakdown-list"></div>
     </div>
-    <button id="restart-button">Opnieuw Spelen</button>
   </div>
 </div>
 
@@ -511,19 +493,19 @@
   const gameOverScreen = document.getElementById("game-over");
   const finalScoreDisplay = document.getElementById("final-score");
   const breakdownList = document.getElementById("breakdown-list");
-  const restartButton = document.getElementById("restart-button");
   const blockPool = document.getElementById("block-pool");
   let gameStarted = false;
   let timerInterval = null;
   let cellWidth = 0;
   let score = 0;
+  let occupiedCells = 0;
   let scoreDetails = {
     invalidPlacements: [],
-    unusedBlocks: []
+    unusedBlocks: [],
+    openCells: 0
   };
 
   startButton.addEventListener("click", startGame);
-  restartButton.addEventListener("click", restartGame);
 
   function startGame() {
     gameStarted = true;
@@ -539,10 +521,6 @@
       verplaatsJeanMarcBlokken();
       markeerJeanMarcAfwezig();
     }, 4000);
-  }
-
-  function restartGame() {
-    location.reload();
   }
 
   techniekers.forEach((tech, rowIndex) => {
@@ -572,7 +550,7 @@
       cell.dataset.row = rowIndex;
       cell.dataset.col = hour;
       cell.dataset.allowedColors = tech.colors.join(',');
-      cell.dataset.hour = hour + 9; // Toegevoegd: uur van de cel
+      cell.dataset.hour = hour + 9; 
 
       cell.addEventListener("dragover", e => {
         if (!cell.classList.contains("afwezig") && !cell.classList.contains("past-time")) {
@@ -604,7 +582,7 @@
       return;
     }
     
-    // Controleren of de cel in het verleden ligt
+    
     if (e.currentTarget.classList.contains("past-time")) {
       alert("Deze tijd is al voorbij! Je kan hier niets meer plannen.");
       return;
@@ -633,7 +611,7 @@
     const allCells = [...document.querySelectorAll(`.cell[data-row='${row}']`)];
     const targetCells = allCells.slice(startCol, startCol + duur);
 
-    // Controleren of alle cellen in de toekomst liggen
+    
     for (const cell of targetCells) {
       if (cell.classList.contains("past-time")) {
         alert("Een deel van dit blokje ligt in het verleden! Kies een latere starttijd.");
@@ -691,8 +669,20 @@
     
     draggedBlock = null;
 
+    updateOccupiedCells();
     updateBlockStatus(newBlock);
     updatePastTimeCells();
+  }
+
+  function updateOccupiedCells() {
+    const allBlocks = document.querySelectorAll('.in-grid');
+    let totalCells = 0;
+    
+    allBlocks.forEach(block => {
+      totalCells += parseInt(block.dataset.duration);
+    });
+    
+    occupiedCells = totalCells;
   }
 
   function verwijderBlok(blok) {
@@ -734,6 +724,7 @@
     blockPool.appendChild(wrapper);
 
     blok.remove();
+    updateOccupiedCells();
   }
 
   function calculatePoints(color) {
@@ -801,6 +792,21 @@
         });
     }
     
+    
+    if (scoreDetails.openCells > 0) {
+        const div = document.createElement("div");
+        div.innerHTML = "<h4>Punten voor open vakjes:</h4>";
+        breakdownList.appendChild(div);
+        
+        const scoreItem = document.createElement("div");
+        scoreItem.className = "score-item";
+        scoreItem.innerHTML = `
+            <span>${scoreDetails.openCells} open vakjes</span>
+            <span class="score-points">+${scoreDetails.openCells}</span>
+        `;
+        breakdownList.appendChild(scoreItem);
+    }
+    
     const totalItem = document.createElement("div");
     totalItem.className = "score-item";
     totalItem.style.marginTop = "20px";
@@ -821,6 +827,16 @@
       updateScore(points);
       scoreDetails.unusedBlocks.push({color: blockColor, points: points});
     });
+
+    
+    updateOccupiedCells();
+    
+    
+    const openCells = 32 - occupiedCells;
+    if (openCells > 0) {
+      updateScore(openCells);
+      scoreDetails.openCells = openCells;
+    }
 
     showGameOver();
   }
@@ -874,6 +890,7 @@
 
     targetCells[0].appendChild(newBlock);
     
+    updateOccupiedCells();
     updateBlockStatus(newBlock);
   }
 
@@ -927,6 +944,8 @@
     });
 
     jmBlokken.forEach(block => block.remove());
+    
+    setTimeout(updateOccupiedCells, 100);
   }
 
   function enkelgrijsBlokToegevoegd() {
@@ -1246,10 +1265,10 @@
     document.querySelectorAll('.cell.dropzone').forEach(cell => {
       const cellHour = parseInt(cell.dataset.hour);
       
-      // Verwijder eerst de bestaande past-time markering
+      
       cell.classList.remove("past-time");
       
-      // Als de cel in het verleden ligt, markeer deze dan
+      
       if (cellHour < currentHour) {
         cell.classList.add("past-time");
       }
@@ -1320,14 +1339,27 @@
     }
     
     if (totalMinutes >= 15 * 60 && !jfKlantAfwezig) {
-      toonPopup("Klant van Jean-Francois is afwezig!");
-
-      const jfGeleBlokken = document.querySelectorAll(`.cell[data-row='3'] .in-grid`);
-      jfGeleBlokken.forEach(blok => {
-        if (blok.querySelector('.block-label').textContent === "SME" && blok.style.backgroundColor === "goldenrod") {
+      
+      const jfBlokkenOm15u = document.querySelectorAll(`.cell[data-row='3'] .in-grid`);
+      let heeftBlokOm15u = false;
+      
+      jfBlokkenOm15u.forEach(blok => {
+        const startUur = parseInt(blok.dataset.startHour);
+        
+       
+        if (startUur === 15) {
           blok.remove();
+          heeftBlokOm15u = true;
         }
       });
+      
+
+      if (heeftBlokOm15u) {
+        toonPopup("Klant van Jean-Francois is afwezig!");
+      }
+      
+   
+      setTimeout(updateOccupiedCells, 100);
 
       jfKlantAfwezig = true;
     }
@@ -1338,7 +1370,7 @@
     }
   }
 
-  // Initialiseer de planning met de originele blokken
+ 
   window.addEventListener("DOMContentLoaded", () => {
     plaatsBlok(0, 0, "green", 6, "F7");
     plaatsBlok(0, 6, "goldenrod", 2, "SME");
@@ -1358,6 +1390,7 @@
       cellWidth = firstHeader.getBoundingClientRect().width;
       
       timeline.style.left = '128px';
+      updateOccupiedCells();
       updatePastTimeCells();
     }, 100);
   });
