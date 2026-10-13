@@ -865,7 +865,7 @@
             const scoreItem = document.createElement("div");
             scoreItem.className = "score-item";
             scoreItem.innerHTML = `
-                <span>Unused ${getColorName(item.color)} blok</span>
+                <span style="display:flex;align-items:center;gap:8px;"><span class="legend-swatch" data-color="${item.color}"></span>Unused ${getColorName(item.color)} blok</span>
                 <span class="score-points">+${item.points}</span>
             `;
             breakdownList.appendChild(scoreItem);
