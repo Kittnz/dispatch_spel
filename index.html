@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Technician Planning Game</title>
@@ -469,32 +469,37 @@
 
 <div id="start-screen">
   <div id="start-content">
-    <h2>Technician Planning Game</h2>
-    <button id="start-button">Start Game</button>
+    <h2 data-i18n="title">Technician Planning Game</h2>
+    <button id="start-button" data-i18n="start">Start Game</button>
   </div>
 </div>
 
 <div id="game-over">
   <div id="game-over-content">
-    <h2>GAME OVER</h2>
-    <div>Your Results:</div>
+    <h2 data-i18n="gameOver">GAME OVER</h2>
+    <div data-i18n="results">Your Results:</div>
     <div id="final-score">0 points</div>
     <div id="score-breakdown">
-      <h3>Score-overview</h3>
+      <h3 data-i18n="overview">Score-overview</h3>
       <div id="breakdown-list"></div>
     </div>
   </div>
 </div>
 
 <img src="proximus.png" alt="Proximus Logo" style="height:60px; margin-bottom:10px;">
-<label style="margin-left:20px;"><input type="checkbox" id="cb-toggle" checked> Colorblind mode (patterns)</label>
+<label style="margin-left:20px;"><input type="checkbox" id="cb-toggle" checked> <span data-i18n="colorblind">Colorblind mode (patterns)</span></label>
+<select id="lang-select" style="margin-left:20px;">
+  <option value="en">English</option>
+  <option value="fr">Français</option>
+  <option value="nl">Nederlands</option>
+</select>
 <div id="timer-container">
   <div id="score">
-    <span class="score-label">SCORE</span>
+    <span class="score-label" data-i18n="score">SCORE</span>
     <span id="score-display">0</span>
   </div>
   <div id="timer">
-    <span class="timer-label">CURRENT TIME</span>
+    <span class="timer-label" data-i18n="currentTime">CURRENT TIME</span>
     <span id="time-display">9:00</span>
   </div>
 </div>
@@ -543,7 +548,7 @@
 </div>
 
 <!-- Blokken om te slepen -->
-<h2>Blocks</h2>
+<h2 data-i18n="blocks">Blocks</h2>
 <div class="block-pool" id="block-pool">
 </div>
 
@@ -587,6 +592,102 @@
     localStorage.setItem("cbMode", cbToggle.checked ? "on" : "off");
   });
 
+  const I18N = {
+    en: {
+      title: "Technician Planning Game", start: "Start Game", gameOver: "GAME OVER",
+      results: "Your Results:", overview: "Score-overview", score: "SCORE",
+      currentTime: "CURRENT TIME", blocks: "Blocks", colorblind: "Colorblind mode (patterns)",
+      absent: "absent", deleteBlock: "Delete block",
+      popupSick: "Jean-Marc is sick!",
+      popupMichel: "Jean-Michel's customer isn't home!",
+      popupFrancois: "Jean-Francois's customer is absent!",
+      alertAbsent: "Jean-Marc is absent! You can't plan anything here.",
+      alertPast: "This hour has already passed! You can't plan anything here.",
+      alertInvalid: "This technician isn't able to get {type} blocks! Score: +{points}",
+      alertNoSpace: "Not enough place for this block.",
+      alertPartPast: "Part of this block is in the past! Choose a later starting time.",
+      alertOccupied: "There already is a block here.",
+      alertNoDelete: "This block is or has already been active. Therefore, you can't delete it.",
+      points: "{n} points",
+      invalidTitle: "Points caused by impossible placings:", invalidItem: "Impossible {type} placings",
+      unusedTitle: "Points caused by unused blocks:", unusedItem: "Unused {color} block",
+      emptyTitle: "Points caused by empty cells:", emptyItem: "{n} empty cells",
+      total: "TOTAL SCORE",
+      color_green: "Green (F7)", color_red: "Red (CC)", color_goldenrod: "Yellow (SME)",
+      color_gray: "Grey (REPAIR)", color_blue: "Blue (DATA)"
+    },
+    fr: {
+      title: "Jeu de planification des techniciens", start: "Démarrer", gameOver: "FIN DE PARTIE",
+      results: "Vos résultats :", overview: "Aperçu du score", score: "SCORE",
+      currentTime: "HEURE ACTUELLE", blocks: "Blocs", colorblind: "Mode daltonien (motifs)",
+      absent: "absent", deleteBlock: "Supprimer le bloc",
+      popupSick: "Jean-Marc est malade !",
+      popupMichel: "Le client de Jean-Michel n'est pas chez lui !",
+      popupFrancois: "Le client de Jean-Francois est absent !",
+      alertAbsent: "Jean-Marc est absent ! Vous ne pouvez rien planifier ici.",
+      alertPast: "Cette heure est déjà passée ! Vous ne pouvez rien planifier ici.",
+      alertInvalid: "Ce technicien ne peut pas traiter les blocs {type} ! Score : +{points}",
+      alertNoSpace: "Pas assez de place pour ce bloc.",
+      alertPartPast: "Une partie de ce bloc se trouve dans le passé ! Choisissez une heure de début plus tardive.",
+      alertOccupied: "Il y a déjà un bloc ici.",
+      alertNoDelete: "Ce bloc est ou a déjà été actif. Vous ne pouvez donc pas le supprimer.",
+      points: "{n} points",
+      invalidTitle: "Points dus aux placements impossibles :", invalidItem: "Placements {type} impossibles",
+      unusedTitle: "Points dus aux blocs inutilisés :", unusedItem: "Bloc {color} inutilisé",
+      emptyTitle: "Points dus aux cases vides :", emptyItem: "{n} cases vides",
+      total: "SCORE TOTAL",
+      color_green: "Vert (F7)", color_red: "Rouge (CC)", color_goldenrod: "Jaune (SME)",
+      color_gray: "Gris (REPAIR)", color_blue: "Bleu (DATA)"
+    },
+    nl: {
+      title: "Technieker Planningsspel", start: "Start spel", gameOver: "GAME OVER",
+      results: "Jouw resultaten:", overview: "Scoreoverzicht", score: "SCORE",
+      currentTime: "HUIDIG UUR", blocks: "Blokken", colorblind: "Kleurenblind-modus (patronen)",
+      absent: "afwezig", deleteBlock: "Blok verwijderen",
+      popupSick: "Jean-Marc is ziek!",
+      popupMichel: "De klant van Jean-Michel is niet thuis!",
+      popupFrancois: "De klant van Jean-Francois is afwezig!",
+      alertAbsent: "Jean-Marc is afwezig! Je kunt hier niets plannen.",
+      alertPast: "Dit uur is al voorbij! Je kunt hier niets plannen.",
+      alertInvalid: "Deze technieker kan geen {type}-blokken krijgen! Score: +{points}",
+      alertNoSpace: "Niet genoeg plaats voor dit blok.",
+      alertPartPast: "Een deel van dit blok ligt in het verleden! Kies een later startuur.",
+      alertOccupied: "Er staat hier al een blok.",
+      alertNoDelete: "Dit blok is of was al actief. Je kunt het dus niet verwijderen.",
+      points: "{n} punten",
+      invalidTitle: "Punten door onmogelijke plaatsingen:", invalidItem: "Onmogelijke {type}-plaatsingen",
+      unusedTitle: "Punten door ongebruikte blokken:", unusedItem: "Ongebruikt {color} blok",
+      emptyTitle: "Punten door lege vakjes:", emptyItem: "{n} lege vakjes",
+      total: "TOTAALSCORE",
+      color_green: "Groen (F7)", color_red: "Rood (CC)", color_goldenrod: "Geel (SME)",
+      color_gray: "Grijs (REPAIR)", color_blue: "Blauw (DATA)"
+    }
+  };
+
+  const langSelect = document.getElementById("lang-select");
+  let lang = localStorage.getItem("lang");
+  if (!I18N[lang]) lang = "en";
+  langSelect.value = lang;
+
+  function t(key, params = {}) {
+    return I18N[lang][key].replace(/\{(\w+)\}/g, (_, k) => params[k]);
+  }
+
+  function applyLanguage() {
+    document.documentElement.lang = lang;
+    document.title = t("title");
+    document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll("[data-i18n-title]").forEach(el => { el.title = t(el.dataset.i18nTitle); });
+    if (gameOverScreen.style.display === "flex") showGameOver();
+  }
+
+  langSelect.addEventListener("change", () => {
+    lang = langSelect.value;
+    localStorage.setItem("lang", lang);
+    applyLanguage();
+  });
+  applyLanguage();
+
   function startGame() {
     gameStarted = true;
     startScreen.classList.add("hidden");
@@ -597,7 +698,7 @@
     timerInterval = setInterval(updateTimer, 5000);
     
     setTimeout(() => {
-      toonPopup("Jean-Marc is sick!");
+      toonPopup(t("popupSick"));
       verplaatsJeanMarcBlokken();
       markeerJeanMarcAfwezig();
     }, 4000);
@@ -658,13 +759,13 @@
     if (!draggedBlock || draggedBlock.classList.contains("used") || 
         draggedBlock.classList.contains("active") || draggedBlock.classList.contains("completed")) return;
     if (e.currentTarget.classList.contains("absent")) {
-      alert("Jean-Marc is absent! You can't plan anything here.");
+      alert(t("alertAbsent"));
       return;
     }
     
     // Controleren of de cel in het verleden ligt
     if (e.currentTarget.classList.contains("past-time")) {
-      alert("This hour has already passed! You can't plan anything here.");
+      alert(t("alertPast"));
       return;
     }
 
@@ -679,12 +780,12 @@
       const points = calculatePoints(blockColor);
       updateScore(points);
       scoreDetails.invalidPlacements.push({type: blockType, points: points});
-      alert(`This technician isn't able to get ${blockType} blocks! Score: +${points}`);
+      alert(t("alertInvalid", { type: blockType, points }));
       return;
     }
 
     if (startCol + duur > 8) {
-      alert("Not enough place for this block.");
+      alert(t("alertNoSpace"));
       return;
     }
 
@@ -694,14 +795,14 @@
     // Controleren of alle cellen in de toekomst liggen
     for (const cell of targetCells) {
       if (cell.classList.contains("past-time")) {
-        alert("Part of this block is in the past! Choose a later startingtime.");
+        alert(t("alertPartPast"));
         return;
       }
     }
 
     for (const cell of targetCells) {
       if (cell.querySelector(".in-grid")) {
-        alert("There already is a block here.");
+        alert(t("alertOccupied"));
         return;
       }
     }
@@ -722,7 +823,8 @@
     const returnButton = document.createElement("div");
     returnButton.className = "return-to-pool";
     returnButton.textContent = "×";
-    returnButton.title = "delete block";
+    returnButton.title = t("deleteBlock");
+    returnButton.dataset.i18nTitle = "deleteBlock";
     returnButton.addEventListener("click", function(e) {
       e.stopPropagation();
       verwijderBlok(newBlock);
@@ -767,7 +869,7 @@
 
   function verwijderBlok(blok) {
     if (blok.classList.contains("active") || blok.classList.contains("completed")) {
-      alert("This block is or has already been active. Therefore, you can't delete it.");
+      alert(t("alertNoDelete"));
       return;
     }
     
@@ -786,7 +888,7 @@
     
     const durationElement = document.createElement("div");
     durationElement.className = "block-duration";
-    durationElement.textContent = `${blok.dataset.duration}u`;
+    durationElement.textContent = `${blok.dataset.duration}h`;
     
     nieuwBlok.appendChild(labelElement);
     nieuwBlok.appendChild(durationElement);
@@ -819,6 +921,7 @@
   }
 
   function getColorName(color) {
+    if (I18N[lang]["color_" + color]) return t("color_" + color);
     switch(color) {
       case "green": return "Green (F7)";
       case "red": return "Red (CC)";
@@ -836,20 +939,20 @@
 
   function showGameOver() {
     gameOverScreen.style.display = "flex";
-    finalScoreDisplay.textContent = `${score} points`;
+    finalScoreDisplay.textContent = t("points", { n: score });
     
     breakdownList.innerHTML = "";
     
     if (scoreDetails.invalidPlacements.length > 0) {
         const div = document.createElement("div");
-        div.innerHTML = "<h4>Points caused by impossible placings:</h4>";
+        div.innerHTML = `<h4>${t("invalidTitle")}</h4>`;
         breakdownList.appendChild(div);
         
         scoreDetails.invalidPlacements.forEach(item => {
             const scoreItem = document.createElement("div");
             scoreItem.className = "score-item";
             scoreItem.innerHTML = `
-                <span>Impossible ${item.type} placings</span>
+                <span>${t("invalidItem", { type: item.type })}</span>
                 <span class="score-points">+${item.points}</span>
             `;
             breakdownList.appendChild(scoreItem);
@@ -858,14 +961,21 @@
     
     if (scoreDetails.unusedBlocks.length > 0) {
         const div = document.createElement("div");
-        div.innerHTML = "<h4>Points caused by unused blocks:</h4>";
+        div.innerHTML = `<h4>${t("unusedTitle")}</h4>`;
         breakdownList.appendChild(div);
         
+        const grouped = {};
         scoreDetails.unusedBlocks.forEach(item => {
+            grouped[item.color] = grouped[item.color] || { color: item.color, count: 0, points: 0 };
+            grouped[item.color].count++;
+            grouped[item.color].points += item.points;
+        });
+
+        Object.values(grouped).forEach(item => {
             const scoreItem = document.createElement("div");
             scoreItem.className = "score-item";
             scoreItem.innerHTML = `
-                <span style="display:flex;align-items:center;gap:8px;"><span class="legend-swatch" data-color="${item.color}"></span>Unused ${getColorName(item.color)} blok</span>
+                <span style="display:flex;align-items:center;gap:8px;"><span class="legend-swatch" data-color="${item.color}"></span>${item.count}× ${t("unusedItem", { color: getColorName(item.color) })}</span>
                 <span class="score-points">+${item.points}</span>
             `;
             breakdownList.appendChild(scoreItem);
@@ -875,13 +985,13 @@
     // Toon punten voor open vakjes
     if (scoreDetails.openCells > 0) {
         const div = document.createElement("div");
-        div.innerHTML = "<h4>Points caused by empty cells:</h4>";
+        div.innerHTML = `<h4>${t("emptyTitle")}</h4>`;
         breakdownList.appendChild(div);
         
         const scoreItem = document.createElement("div");
         scoreItem.className = "score-item";
         scoreItem.innerHTML = `
-            <span>${scoreDetails.openCells} empty cells</span>
+            <span>${t("emptyItem", { n: scoreDetails.openCells })}</span>
             <span class="score-points">+${scoreDetails.openCells}</span>
         `;
         breakdownList.appendChild(scoreItem);
@@ -893,8 +1003,8 @@
     totalItem.style.fontWeight = "bold";
     totalItem.style.background = "#1e2a36";
     totalItem.innerHTML = `
-        <span>TOTAL SCORE</span>
-        <span class="score-points">${score} points</span>
+        <span>${t("total")}</span>
+        <span class="score-points">${t("points", { n: score })}</span>
     `;
     breakdownList.appendChild(totalItem);
   }
@@ -941,7 +1051,7 @@
     
     const durationElement = document.createElement("div");
     durationElement.className = "block-duration";
-    durationElement.textContent = `${duur}u`;
+    durationElement.textContent = `${duur}h`;
     
     newBlock.appendChild(labelElement);
     newBlock.appendChild(durationElement);
@@ -949,7 +1059,8 @@
     const returnButton = document.createElement("div");
     returnButton.className = "return-to-pool";
     returnButton.textContent = "×";
-    returnButton.title = "Delete block";
+    returnButton.title = t("deleteBlock");
+    returnButton.dataset.i18nTitle = "deleteBlock";
     returnButton.addEventListener("click", function(e) {
       e.stopPropagation();
       verwijderBlok(newBlock);
@@ -1005,7 +1116,7 @@
       
       const durationElement = document.createElement("div");
       durationElement.className = "block-duration";
-      durationElement.textContent = `${duur}u`;
+      durationElement.textContent = `${duur}h`;
       
       nieuwBlok.appendChild(labelElement);
       nieuwBlok.appendChild(durationElement);
@@ -1141,7 +1252,8 @@
     const jmCells = document.querySelectorAll(`.cell[data-row='4']`);
     jmCells.forEach(cell => {
       cell.style.backgroundColor = "#e0e0e0"; 
-      cell.textContent = "absent";
+      cell.dataset.i18n = "absent";
+      cell.textContent = t("absent");
       cell.style.color = "#888";
       cell.classList.add("absent");
       cell.style.cursor = "not-allowed";
@@ -1413,7 +1525,7 @@
     }
 
     if (totalMinutes >= 14 * 60 && !smeeBlokVerplaatst) {
-      toonPopup("Jean-Michel's customer isn't home!");
+      toonPopup(t("popupMichel"));
       verplaatsSmeJeanMichel();
       smeeBlokVerplaatst = true;
     }
@@ -1435,7 +1547,7 @@
       
       // Toon alleen pop-up als er een blokje was om 15u
       if (heeftBlokOm15u) {
-        toonPopup("Jean-Francois's customer is absent!");
+        toonPopup(t("popupFrancois"));
       }
       
       // Bijwerken van bezette cellen na verwijderen
