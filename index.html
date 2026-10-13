@@ -91,6 +91,44 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
+    [data-color="green"] { background-color: green; }
+    [data-color="red"] { background-color: red; }
+    [data-color="goldenrod"] { background-color: goldenrod; }
+    [data-color="blue"] { background-color: blue; }
+    [data-color="gray"] { background-color: gray; }
+
+    /* Middentonen + patroon, zodat kleur niet de enige aanwijzing is */
+    body.cb-mode [data-color="green"] {
+      background-color: #2E9E5B;
+      background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.4) 0 4px, transparent 4px 10px);
+    }
+    body.cb-mode [data-color="red"] {
+      background-color: #D6452F;
+      background-image: radial-gradient(rgba(255,255,255,0.6) 2px, transparent 2.5px);
+      background-size: 10px 10px;
+    }
+    body.cb-mode [data-color="goldenrod"] {
+      background-color: #F2B600;
+      background-image: repeating-linear-gradient(0deg, rgba(0,0,0,0.3) 0 2px, transparent 2px 8px);
+      color: #000;
+    }
+    body.cb-mode [data-color="blue"] {
+      background-color: #3B7DD8;
+      background-image: none;
+    }
+    body.cb-mode [data-color="gray"] {
+      background-color: #9A9A9A;
+      background-image:
+        repeating-linear-gradient(45deg, rgba(0,0,0,0.3) 0 2px, transparent 2px 8px),
+        repeating-linear-gradient(-45deg, rgba(0,0,0,0.3) 0 2px, transparent 2px 8px);
+      color: #000;
+    }
+    body.cb-mode .block[data-color="goldenrod"] .block-duration,
+    body.cb-mode .block[data-color="gray"] .block-duration {
+      background: rgba(255,255,255,0.6);
+      border-color: rgba(0,0,0,0.4);
+    }
+
     .used {
       opacity: 0.5;
       cursor: not-allowed;
@@ -424,6 +462,7 @@
 </div>
 
 <img src="proximus.png" alt="Proximus Logo" style="height:60px; margin-bottom:10px;">
+<label style="margin-left:20px;"><input type="checkbox" id="cb-toggle" checked> Colorblind mode (patterns)</label>
 <div id="timer-container">
   <div id="score">
     <span class="score-label">SCORE</span>
@@ -507,6 +546,14 @@
 
   startButton.addEventListener("click", startGame);
 
+  const cbToggle = document.getElementById("cb-toggle");
+  cbToggle.checked = localStorage.getItem("cbMode") !== "off";
+  document.body.classList.toggle("cb-mode", cbToggle.checked);
+  cbToggle.addEventListener("change", () => {
+    document.body.classList.toggle("cb-mode", cbToggle.checked);
+    localStorage.setItem("cbMode", cbToggle.checked ? "on" : "off");
+  });
+
   function startGame() {
     gameStarted = true;
     startScreen.classList.add("hidden");
@@ -537,7 +584,7 @@
     tech.colors.forEach(color => {
       const colorIndicator = document.createElement("div");
       colorIndicator.className = "color-indicator";
-      colorIndicator.style.backgroundColor = color;
+      colorIndicator.dataset.color = color;
       colorsContainer.appendChild(colorIndicator);
     });
     
@@ -592,7 +639,7 @@
     const startCol = parseInt(e.currentTarget.dataset.col);
     const row = parseInt(e.currentTarget.dataset.row);
     const allowedColors = e.currentTarget.dataset.allowedColors.split(',');
-    const blockColor = draggedBlock.style.backgroundColor;
+    const blockColor = draggedBlock.dataset.color;
     const blockType = draggedBlock.querySelector('.block-label').textContent;
 
     if (!allowedColors.includes(blockColor)) {
@@ -698,7 +745,7 @@
     nieuwBlok.className = "block";
     nieuwBlok.setAttribute("draggable", "true");
     nieuwBlok.setAttribute("data-duur", blok.dataset.duration);
-    nieuwBlok.style.background = blok.style.backgroundColor;
+    nieuwBlok.dataset.color = blok.dataset.color;
     
     const labelElement = document.createElement("div");
     labelElement.className = "block-label";
@@ -822,7 +869,7 @@
   function calculateFinalScore() {
     const remainingBlocks = document.querySelectorAll('#block-pool .block:not(.used)');
     remainingBlocks.forEach(block => {
-      const blockColor = block.style.backgroundColor;
+      const blockColor = block.dataset.color;
       const points = calculatePoints(blockColor);
       updateScore(points);
       scoreDetails.unusedBlocks.push({color: blockColor, points: points});
@@ -850,7 +897,7 @@
 
     const newBlock = document.createElement("div");
     newBlock.className = "block in-grid";
-    newBlock.style.background = kleur;
+    newBlock.dataset.color = kleur;
     newBlock.style.width = `${totaleBreedte}px`;
     newBlock.style.height = `50px`;
     newBlock.draggable = true;
@@ -907,7 +954,7 @@
     const jmBlokken = document.querySelectorAll(`.cell[data-row='4'] .in-grid`);
     jmBlokken.forEach(block => {
       const label = block.querySelector('.block-label').textContent;
-      const kleur = block.style.backgroundColor;
+      const kleur = block.dataset.color;
       const duur = Math.round(block.getBoundingClientRect().width / block.parentElement.getBoundingClientRect().width);
 
       const wrapper = document.createElement("div");
@@ -917,7 +964,7 @@
       nieuwBlok.className = "block";
       nieuwBlok.setAttribute("draggable", "true");
       nieuwBlok.setAttribute("data-duur", duur);
-      nieuwBlok.style.background = kleur;
+      nieuwBlok.dataset.color = kleur;
       
       const labelElement = document.createElement("div");
       labelElement.className = "block-label";
@@ -956,7 +1003,7 @@
     repairBlock.className = "block";
     repairBlock.setAttribute("draggable", "true");
     repairBlock.setAttribute("data-duur", "1");
-    repairBlock.style.background = "gray";
+    repairBlock.dataset.color = "gray";
     
     const labelElement = document.createElement("div");
     labelElement.className = "block-label";
@@ -992,7 +1039,7 @@
       repairBlock.className = "block";
       repairBlock.setAttribute("draggable", "true");
       repairBlock.setAttribute("data-duur", "1");
-      repairBlock.style.background = "gray";
+      repairBlock.dataset.color = "gray";
       
       const labelElement = document.createElement("div");
       labelElement.className = "block-label";
@@ -1029,7 +1076,7 @@
       blueBlock.className = "block";
       blueBlock.setAttribute("draggable", "true");
       blueBlock.setAttribute("data-duur", "2");
-      blueBlock.style.background = "blue";
+      blueBlock.dataset.color = "blue";
       
       const labelElement = document.createElement("div");
       labelElement.className = "block-label";
@@ -1076,7 +1123,7 @@
     geelBlok.className = "block";
     geelBlok.setAttribute("draggable", "true");
     geelBlok.setAttribute("data-duur", "2");
-    geelBlok.style.background = "goldenrod";
+    geelBlok.dataset.color = "goldenrod";
     
     const labelElement = document.createElement("div");
     labelElement.className = "block-label";
@@ -1111,7 +1158,7 @@
     groenBlok.className = "block";
     groenBlok.setAttribute("draggable", "true");
     groenBlok.setAttribute("data-duur", "3");
-    groenBlok.style.background = "green";
+    groenBlok.dataset.color = "green";
     
     const labelElement = document.createElement("div");
     labelElement.className = "block-label";
@@ -1146,7 +1193,7 @@
     roodBlok.className = "block";
     roodBlok.setAttribute("draggable", "true");
     roodBlok.setAttribute("data-duur", "2");
-    roodBlok.style.background = "red";
+    roodBlok.dataset.color = "red";
     
     const labelElement = document.createElement("div");
     labelElement.className = "block-label";
@@ -1186,7 +1233,7 @@
     geelBlok.className = "block";
     geelBlok.setAttribute("draggable", "true");
     geelBlok.setAttribute("data-duur", "2");
-    geelBlok.style.background = "goldenrod";
+    geelBlok.dataset.color = "goldenrod";
     
     const labelElement = document.createElement("div");
     labelElement.className = "block-label";
