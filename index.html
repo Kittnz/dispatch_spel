@@ -129,6 +129,29 @@
       border-color: rgba(0,0,0,0.4);
     }
 
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      padding: 4px 10px;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      font-size: 14px;
+    }
+    .legend-swatch {
+      width: 32px;
+      height: 20px;
+      border: 2px solid #000;
+      border-radius: 4px;
+    }
+
     .used {
       opacity: 0.5;
       cursor: not-allowed;
@@ -490,6 +513,14 @@
   border: 2px solid #FF9800;
 ">
   Jean-Marc is sick!
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-swatch" data-color="green"></span>F7 (3h)</div>
+  <div class="legend-item"><span class="legend-swatch" data-color="red"></span>CC (2h)</div>
+  <div class="legend-item"><span class="legend-swatch" data-color="goldenrod"></span>SME (2h)</div>
+  <div class="legend-item"><span class="legend-swatch" data-color="blue"></span>DATA (2h)</div>
+  <div class="legend-item"><span class="legend-swatch" data-color="gray"></span>REPAIR (1h)</div>
 </div>
 
 <div class="grid-container">
